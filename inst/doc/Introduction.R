@@ -3,7 +3,7 @@ library(fbar)
 data(ecoli_core)
 
 try({ # this will fail if no appropriate solver is available.
-  library(ROI.plugin.glpk)
+  library(ROI.plugin.ecos)
 
   ecoli_core_with_flux <- find_fluxes_df(ecoli_core)
 })
@@ -12,7 +12,7 @@ try({ # this will fail if no appropriate solver is available.
 library(fbar)
 library(dplyr)
 library(ROI)
-try(library(ROI.plugin.glpk))
+try(library(ROI.plugin.ecos))
 data(ecoli_core)
 
 roi_model <- ecoli_core %>%
@@ -33,5 +33,5 @@ if(length(ROI_applicable_solvers(roi_model))>=1){
 #  devtools::install_github('maxconway/fbar')
 
 ## ---- eval=FALSE---------------------------------------------------------
-#  install.packages('ROI.plugin.glpk')
+#  install.packages('ROI.plugin.ecos')
 

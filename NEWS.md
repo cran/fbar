@@ -1,3 +1,21 @@
+# fbar 0.1.23
+
+- Added DONTRUN to some examples which take too long on some platforms
+
+# fbar 0.1.19
+
+- New vignette
+
+# fbar 0.1.18
+
+- variety of bug fixes
+
+# fbar 0.1.17
+
+- Started moving to using ROI.plugin.ecos for examples and tests, since it has no dependencies
+- New function to convert from an expanded model back to a reaction table
+- Fixed a bug in the total flux minimization code of find_fluxes_df
+
 # fbar 0.1.16
 
 - Changes to tests to reduce chatter further

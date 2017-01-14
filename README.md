@@ -3,7 +3,7 @@
 fbar
 ====
 
-[![Travis-CI Build Status](https://travis-ci.org/NA/NA.svg?branch=master)](https://travis-ci.org/NA/NA)
+[![Travis-CI Build Status](https://travis-ci.org/maxconway/fbar.svg?branch=master)](https://travis-ci.org/maxconway/fbar)
 
 `fbar` is a simple, easy to use Flux Balance Analysis package with a tidy data approach. Just `data_frames` and the occasional `list`, no new classes to learn. The focus is on simplicity and speed. Models are expected as a flat table, and results can be simply appended to the table. This makes this package very suitable for useage in pipelines with pre- and post- processing of models and results, so that it works well as a backbone for customized methods. Loading, parsing and evaluating a model takes around 0.1s, which, together with the straightforward data structures used, makes this library very suitable for large parameter sweeps.
 
@@ -17,7 +17,7 @@ library(fbar)
 data(ecoli_core)
 
 try({ # this will fail if no appropriate solver is available.
-  library(ROI.plugin.glpk)
+  library(ROI.plugin.ecos)
 
   ecoli_core_with_flux <- find_fluxes_df(ecoli_core)
 })
@@ -32,7 +32,7 @@ This example finds the fluxes in ecoli\_core, just like the previous case. Howev
 library(fbar)
 library(dplyr)
 library(ROI)
-try(library(ROI.plugin.glpk))
+try(library(ROI.plugin.ecos))
 data(ecoli_core)
 
 roi_model <- ecoli_core %>%
@@ -92,16 +92,10 @@ devtools::install_github('maxconway/fbar')
 
 #### Install a linear programming solver:
 
-This package requires a linear programming solver. There are a number of options for this (see below), but the easiest way to get started is to install glpk, as follows.
-
-In a (linux) terminal run:
-
-    sudo apt-get install libglpk-dev
-
-Then run this in R:
+This package requires a linear programming solver. There are a number of options for this (see below), but the easiest way to get started is to install `ROI.plugin.ecos` (one of the suggested packages).
 
 ``` r
-install.packages('ROI.plugin.glpk')
+install.packages('ROI.plugin.ecos')
 ```
 
 ### Comparison with other packages

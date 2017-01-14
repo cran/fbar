@@ -12,7 +12,7 @@
 
 <meta name="author" content="Max Conway" />
 
-<meta name="date" content="2016-12-19" />
+<meta name="date" content="2017-01-14" />
 
 <title>Introduction</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Introduction</h1>
 <h4 class="author"><em>Max Conway</em></h4>
-<h4 class="date"><em>2016-12-19</em></h4>
+<h4 class="date"><em>2017-01-14</em></h4>
 
 
 
@@ -84,7 +84,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="kw">data</span>(ecoli_core)
 
 <span class="kw">try</span>({ <span class="co"># this will fail if no appropriate solver is available.</span>
-  <span class="kw">library</span>(ROI.plugin.glpk)
+  <span class="kw">library</span>(ROI.plugin.ecos)
 
   ecoli_core_with_flux &lt;-<span class="st"> </span><span class="kw">find_fluxes_df</span>(ecoli_core)
 })</code></pre></div>
@@ -95,7 +95,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(fbar)
 <span class="kw">library</span>(dplyr)
 <span class="kw">library</span>(ROI)
-<span class="kw">try</span>(<span class="kw">library</span>(ROI.plugin.glpk))
+<span class="kw">try</span>(<span class="kw">library</span>(ROI.plugin.ecos))
 <span class="kw">data</span>(ecoli_core)
 
 roi_model &lt;-<span class="st"> </span>ecoli_core %&gt;%
@@ -152,11 +152,8 @@ if(<span class="kw">length</span>(<span class="kw">ROI_applicable_solvers</span>
 </div>
 <div id="install-a-linear-programming-solver" class="section level4">
 <h4>Install a linear programming solver:</h4>
-<p>This package requires a linear programming solver. There are a number of options for this (see below), but the easiest way to get started is to install glpk, as follows.</p>
-<p>In a (linux) terminal run:</p>
-<pre><code>sudo apt-get install libglpk-dev</code></pre>
-<p>Then run this in R:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">install.packages</span>(<span class="st">'ROI.plugin.glpk'</span>)</code></pre></div>
+<p>This package requires a linear programming solver. There are a number of options for this (see below), but the easiest way to get started is to install <code>ROI.plugin.ecos</code> (one of the suggested packages).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">install.packages</span>(<span class="st">'ROI.plugin.ecos'</span>)</code></pre></div>
 </div>
 </div>
 <div id="comparison-with-other-packages" class="section level3">

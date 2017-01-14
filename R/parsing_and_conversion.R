@@ -91,20 +91,21 @@ parse_met_list <- function(mets){
 #' 
 #' @examples 
 #' 
+#' \dontrun{
 #' data(ecoli_core)
-#' library(ROI)
 #' library(dplyr)
-#' try(library(ROI.plugin.glpk)) # make a solver available to ROI
+#' try(library(ROI.plugin.ecos)) # make a solver available to ROI
 #'
 #' roi_model <- ecoli_core %>%
 #'   reactiontbl_to_expanded %>%
 #'   expanded_to_ROI
 #'   
-#' if(length(ROI_applicable_solvers(roi_model))>=1){
-#'   roi_result <- ROI_solve(roi_model)
+#' if(length(ROI::ROI_applicable_solvers(roi_model))>=1){
+#'   roi_result <- ROI::ROI_solve(roi_model)
 #'   
 #'   ecoli_core_with_flux <- ecoli_core %>%
 #'     mutate(flux = roi_result[['solution']])
+#' }
 #' }
 reactiontbl_to_expanded <- function(reaction_table, regex_arrow = '<?[-=]+>'){
   assert_that('data.frame' %in% class(reaction_table))
@@ -153,6 +154,40 @@ reactiontbl_to_expanded <- function(reaction_table, regex_arrow = '<?[-=]+>'){
               mets = reactions_expanded %>% 
                 group_by_(~met) %>%
                 summarise()))
+}
+
+#' Convert intermediate expanded format back to a reaction table
+#' 
+#' Useful for saving a new or edited model
+#' 
+#' @param expanded A list of data frames: \itemize{
+#'   \item \code{rxns}, which has one row per reaction, 
+#'   \item \code{mets}, which has one row for each metabolite, and 
+#'   \item \code{stoich}, which has one row for each time a metabolite appears in a reaction.
+#' }
+#' 
+#' @return A data frame describing the metabolic model.
+#' 
+#' @import dplyr
+#' @import stringr
+#' @export
+expanded_to_reactiontbl <- function(expanded){
+  equation_tbl <- expanded$stoich %>%
+    mutate_(side =~ c('substrate', 'none', 'product')[sign(stoich)+2],
+            symbol =~ if_else(abs(stoich)!=1, 
+                              str_c('(',abs(stoich),') ',met), 
+                              met
+            )
+    ) %>%
+    group_by_(~abbreviation, ~side) %>%
+    summarise_(sum =~ str_c(symbol, collapse=' + ')) %>%
+    tidyr::spread_('side', 'sum')
+  
+  inner_join(expanded$rxns, equation_tbl) %>%
+    mutate_(reversible =~ lowbnd<0) %>%
+    mutate_(equation =~ str_c(substrate, c('-->', '<==>')[reversible+1], product,sep=' ')) %>%
+    select_(quote(-substrate), quote(-product), quote(-reversible)) %>%
+    ungroup
 }
 
 
@@ -334,20 +369,22 @@ expanded_to_glpk <- function(reactions_expanded){
 #' @import ROI
 #' 
 #' @examples 
+#' 
+#' \dontrun{
 #' data(ecoli_core)
-#' library(ROI)
 #' library(dplyr)
-#' try(library(ROI.plugin.glpk)) # make a solver available to ROI
+#' try(library(ROI.plugin.ecos)) # make a solver available to ROI
 #'
 #' roi_model <- ecoli_core %>%
 #'   reactiontbl_to_expanded %>%
 #'   expanded_to_ROI
 #'   
-#' if(length(ROI_applicable_solvers(roi_model))>=1){
-#'   roi_result <- ROI_solve(roi_model)
+#' if(length(ROI::ROI_applicable_solvers(roi_model))>=1){
+#'   roi_result <- ROI::ROI_solve(roi_model)
 #'   
 #'   ecoli_core_with_flux <- ecoli_core %>%
 #'     mutate(flux = roi_result[['solution']])
+#' }
 #' }
 expanded_to_ROI <- function(reactions_expanded){
   
