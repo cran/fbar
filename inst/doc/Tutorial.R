@@ -1,8 +1,10 @@
 ## ---- eval=FALSE---------------------------------------------------------
-#  install.packages('fbar)
+#  install.packages('fbar')
+#  library(fbar)
 
 ## ---- eval=FALSE---------------------------------------------------------
-#  devtools::install('maxconway/fbar')
+#  devtools::install_github('maxconway/fbar')
+#  library(fbar)
 
 ## ---- eval=FALSE---------------------------------------------------------
 #  ROI::ROI_registered_solvers()
@@ -11,18 +13,21 @@
 #  ROI::ROI_registered_solvers()
 
 ## ------------------------------------------------------------------------
+library(fbar) # load fbar package
 data(ecoli_core)
 
-## ------------------------------------------------------------------------
-ecoli_fluxes <- ecoli_core %>% 
-  reactiontbl_to_expanded() %>% 
-  expanded_to_ROI() %>% 
-  ROI::ROI_solve() %>% 
-  ROI::solution()
+## ---- eval=FALSE---------------------------------------------------------
+#  library(dplyr) # load dplyr, to explore data
+#  
+#  ecoli_fluxes <- ecoli_core %>%
+#    reactiontbl_to_expanded() %>%
+#    expanded_to_ROI() %>%
+#    ROI::ROI_solve() %>%
+#    ROI::solution()
+#  
+#  ecoli_core_evaluated <- ecoli_core %>%
+#    mutate(flux = ecoli_fluxes)
 
-ecoli_core_evaluated <- ecoli_core %>%
-  mutate(flux = ecoli_fluxes)
-
-## ------------------------------------------------------------------------
-evaluated <- find_fluxes_df(ecoli_core)
+## ---- eval=FALSE---------------------------------------------------------
+#  evaluated <- find_fluxes_df(ecoli_core)
 

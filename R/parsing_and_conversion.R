@@ -14,6 +14,7 @@
 #' @import assertthat
 #' @import dplyr
 #' @import stringr
+#' @importFrom rlang .data
 split_on_arrow <- function(equations, regex_arrow = '<?[-=]+>'){
   #assert_that(length(equations)>0)
   assert_that(all(str_count(equations, regex_arrow) == 1))
@@ -24,11 +25,11 @@ split_on_arrow <- function(equations, regex_arrow = '<?[-=]+>'){
   
   split %>% 
     tibble::as_data_frame() %>%
-    mutate_(reversible =~ equations %>%
+    mutate(reversible = equations %>%
               str_extract(regex_arrow) %>%
               str_detect('<'),
-            before =~ str_trim(before),
-            after =~ str_trim(after)
+            before = str_trim(.data$before),
+            after = str_trim(.data$after)
     ) %>%
     return
 }
@@ -88,6 +89,7 @@ parse_met_list <- function(mets){
 #' @import assertthat
 #' @import dplyr
 #' @import stringr
+#' @importFrom rlang .data
 #' 
 #' @examples 
 #' 
@@ -120,40 +122,45 @@ reactiontbl_to_expanded <- function(reaction_table, regex_arrow = '<?[-=]+>'){
   const_inf <- 1000
   
   reactions_expanded_partial_1 <- split_on_arrow(reaction_table[['equation']], regex_arrow) %>%
-    mutate_(abbreviation =~ reaction_table[['abbreviation']])
+    mutate(abbreviation = reaction_table[['abbreviation']])
   
   
   reactions_expanded_partial_2 <- bind_rows(
     reactions_expanded_partial_1 %>%
-      transmute_(~abbreviation, string =~ before, direction =~ -1),
+      transmute(.data$abbreviation, string = .data$before, direction = -1),
     reactions_expanded_partial_1 %>%
-      transmute_(~abbreviation, string =~ after, direction =~ 1)
+      transmute(.data$abbreviation, string = .data$after, direction = 1)
   )
   
   reactions_expanded_partial_3 <- reactions_expanded_partial_2 %>%
-    mutate_(symbol =~ stringr::str_split(string, stringr::fixed(' + '))) %>%
+    mutate(symbol = stringr::str_split(.data$string, stringr::fixed(' + '))) %>%
     (function(x){
       if(nrow(x)>0){
-        tidyr::unnest_(x, 'symbol')
+        tidyr::unnest(x, .data$symbol)
       } else {
         return(x)
       }
     }) %>%
-    filter_(~symbol!='')
+    filter(.data$symbol!='')
   
   reactions_expanded <- bind_cols(reactions_expanded_partial_3,
                                   parse_met_list(reactions_expanded_partial_3$symbol)) %>%
-    transmute_(abbreviation =~ abbreviation,
-               stoich =~ stoich*direction,
-               met =~ met) %>%
-    filter_(~met!='')
+    transmute(abbreviation = .data$abbreviation,
+               stoich = .data$stoich*.data$direction,
+               met = .data$met) %>%
+    filter(.data$met!='')
   
-  return(list(stoich = reactions_expanded, 
+  return(list(stoich = reactions_expanded %>%
+                group_by(.data$abbreviation, .data$met) %>%
+                summarise(stoich = sum(.data$stoich)) %>%
+                ungroup(), 
               rxns = reaction_table %>% 
-                select_(~-equation),
+                select(-.data$equation) %>%
+                ungroup(),
               mets = reactions_expanded %>% 
-                group_by_(~met) %>%
-                summarise()))
+                group_by(.data$met) %>%
+                summarise() %>%
+                ungroup()))
 }
 
 #' Convert intermediate expanded format back to a reaction table
@@ -170,175 +177,25 @@ reactiontbl_to_expanded <- function(reaction_table, regex_arrow = '<?[-=]+>'){
 #' 
 #' @import dplyr
 #' @import stringr
+#' @importFrom rlang .data
 #' @export
 expanded_to_reactiontbl <- function(expanded){
   equation_tbl <- expanded$stoich %>%
-    mutate_(side =~ c('substrate', 'none', 'product')[sign(stoich)+2],
-            symbol =~ if_else(abs(stoich)!=1, 
-                              str_c('(',abs(stoich),') ',met), 
-                              met
+    mutate(side = c('substrate', 'none', 'product')[sign(.data$stoich)+2],
+            symbol = if_else(abs(.data$stoich)!=1, 
+                              str_c('(',abs(.data$stoich),') ',.data$met), 
+                             .data$met
             )
     ) %>%
-    group_by_(~abbreviation, ~side) %>%
-    summarise_(sum =~ str_c(symbol, collapse=' + ')) %>%
-    tidyr::spread_('side', 'sum')
+    group_by(.data$abbreviation, .data$side) %>%
+    summarise(sum = str_c(.data$symbol, collapse=' + ')) %>%
+    tidyr::spread('side', 'sum')
   
   inner_join(expanded$rxns, equation_tbl) %>%
-    mutate_(reversible =~ lowbnd<0) %>%
-    mutate_(equation =~ str_c(substrate, c('-->', '<==>')[reversible+1], product,sep=' ')) %>%
-    select_(quote(-substrate), quote(-product), quote(-reversible)) %>%
+    mutate(reversible = .data$lowbnd<0) %>%
+    mutate(equation = str_c(.data$substrate, c('-->', '<==>')[.data$reversible+1], .data$product,sep=' ')) %>%
+    select(-.data$substrate, -.data$product, -.data$reversible) %>%
     ungroup
-}
-
-
-#' Parse a long format metabolic model to a gurobi model
-#' 
-#' Used as the second half of \code{\link{reactiontbl_to_gurobi}}, this parses the long format produced by \code{reactiontbl_to_expanded} to a gurobi model
-#' 
-#' @details 
-#' For installation instructions for Gurobi, refer to the Gurobi website: \url{http://www.gurobi.com/}.
-#' 
-#' The \code{reaction_table} must have columns:
-#' \itemize{
-#'  \item \code{abbreviation},
-#'  \item \code{equation},
-#'  \item \code{uppbnd},
-#'  \item \code{lowbnd}, and
-#'  \item \code{obj_coef}.
-#' }
-#' 
-#' @param reactions_expanded A list of data frames as output by \code{expand_reactions}
-#' 
-#' @return A list suitable for input to Gurobi.
-#' 
-#' @family parsing_and_conversion
-#' @export
-#' @import assertthat 
-#' @import Matrix
-#' 
-#' @examples 
-#' data(ecoli_core)
-#' library(dplyr)
-#'
-#' gurobi_model <- ecoli_core %>%
-#'   reactiontbl_to_expanded %>%
-#'   expanded_to_gurobi
-#'   
-#' \dontrun{
-#' if(requireNamespace('gurobi', quietly=TRUE)){
-#'   gurobi <- gurobi(gurobi_model)
-#'   
-#'   ecoli_core_with_flux <- ecoli_core %>%
-#'     mutate(flux = guorbi_result[['solution']])
-#' }
-#' }
-expanded_to_gurobi <- function(reactions_expanded){
-  
-  rxns <- reactions_expanded$rxns
-  stoich <- reactions_expanded$stoich
-  mets <- reactions_expanded$mets
-  
-  assert_that('data.frame' %in% class(rxns))
-  assert_that(rxns %has_name% 'abbreviation')
-  assert_that(rxns %has_name% 'uppbnd')
-  assert_that(rxns %has_name% 'lowbnd')
-  assert_that(rxns %has_name% 'obj_coef')
-  
-  stoichiometric_matrix <- Matrix::sparseMatrix(j = match(stoich$abbreviation, rxns$abbreviation),
-                                                i = match(stoich$met, mets$met),
-                                                x = stoich$stoich,
-                                                dims = c(nrow(mets),
-                                                         nrow(rxns)
-                                                ),
-                                                dimnames = list(metabolites=mets$met,
-                                                                reactions=rxns$abbreviation)
-  )
-  
-  model <- list(
-    A = stoichiometric_matrix,
-    obj = rxns$obj_coef,
-    sense='=',
-    rhs=0,
-    lb=rxns$lowbnd,
-    ub=rxns$uppbnd,
-    modelsense='max'
-  )
-  
-  return(model)
-}
-
-#' Parse a long format metabolic model to a glpk model
-#' 
-#' This parses the long format produced by \code{reactiontbl_to_expanded} to a glpk model.
-#' 
-#' @details 
-#' To install the Rglpk package in linux, run \code{sudo apt-get install libglpk-dev} in a terminal, and then run \code{install.packages('Rglpk')} in R.
-#' 
-#' The \code{reaction_table} must have columns:
-#' \itemize{
-#'  \item \code{abbreviation},
-#'  \item \code{equation},
-#'  \item \code{uppbnd},
-#'  \item \code{lowbnd}, and
-#'  \item \code{obj_coef}.
-#' }
-#' 
-#' @param reactions_expanded A list of data frames as output by \code{reactiontbl_to_expanded}
-#' 
-#' @return A list suitable for input to Rglpk
-#' 
-#' @family parsing_and_conversion
-#' @export
-#' @import assertthat 
-#' @import Matrix
-#' @examples
-#' data(ecoli_core)
-#' library(dplyr)
-#'
-#' glpk_model <- ecoli_core %>%
-#'   reactiontbl_to_expanded %>%
-#'   expanded_to_glpk
-#'   
-#' if(requireNamespace('Rglpk', quietly=TRUE)){
-#' 
-#'   glpk_result <- purrr::lift_dl(Rglpk::Rglpk_solve_LP)(glpk_model)
-#'   
-#'   ecoli_core_with_flux <- ecoli_core %>%
-#'     mutate(flux = glpk_result[['solution']])
-#' }
-expanded_to_glpk <- function(reactions_expanded){
-  
-  rxns <- reactions_expanded$rxns
-  stoich <- reactions_expanded$stoich
-  mets <- reactions_expanded$mets
-  
-  assert_that('data.frame' %in% class(rxns))
-  assert_that(rxns %has_name% 'abbreviation')
-  assert_that(rxns %has_name% 'uppbnd')
-  assert_that(rxns %has_name% 'lowbnd')
-  assert_that(rxns %has_name% 'obj_coef')
-  
-  stoichiometric_matrix <- Matrix::sparseMatrix(j = match(stoich$abbreviation, rxns$abbreviation),
-                                                i = match(stoich$met, mets$met),
-                                                x = stoich$stoich,
-                                                dims = c(nrow(mets),
-                                                         nrow(rxns)
-                                                ),
-                                                dimnames = list(metabolites=mets$met,
-                                                                reactions=rxns$abbreviation)
-  )
-  
-  model <- list(
-    mat = stoichiometric_matrix,
-    obj = rxns$obj_coef,
-    dir= rep('==', times=nrow(stoichiometric_matrix)),
-    rhs= rep(0, times=nrow(stoichiometric_matrix)),
-    bounds=list(lower=list(ind = seq_along(rxns$lowbnd), val = rxns$lowbnd),
-                upper=list(ind = seq_along(rxns$uppbnd), val = rxns$uppbnd)),
-    max=TRUE
-  )
-  
-  return(model)
 }
 
 #' Parse a long format metabolic model to an ROI model
@@ -347,7 +204,7 @@ expanded_to_glpk <- function(reactions_expanded){
 #' 
 #' @details 
 #' To solve models using ROI, you will need a solver plugin for ROI. Probably the easiest one to install is ROI.plugin.glpk.
-#' To install this in linux, run \code{sudo apt-get install libglpk-dev} in a terminal, and then run \code{install.packages('ROI.plugin.glpk')} in R.
+#' To install this in Linux, run \code{sudo apt-get install libglpk-dev} in a terminal, and then run \code{install.packages('ROI.plugin.glpk')} in R.
 #' 
 #' The \code{reaction_table} must have columns:
 #' \itemize{
@@ -421,63 +278,4 @@ expanded_to_ROI <- function(reactions_expanded){
   return(problem)
 }
 
-
-#' Parse reaction table to Gurobi format
-#' 
-#' Parses a reaction table to give a list in Gurobi's input format.
-#' This function is a shorthand for \code{\link{reactiontbl_to_expanded}} followed by \code{\link{expanded_to_gurobi}}.
-#' 
-#' The \code{reaction_table} must have columns:
-#' \itemize{
-#'  \item \code{abbreviation},
-#'  \item \code{equation},
-#'  \item \code{uppbnd},
-#'  \item \code{lowbnd}, and
-#'  \item \code{obj_coef}.
-#' }
-#' 
-#' @param reaction_table A data frame describing the metabolic model.
-#' @param regex_arrow Regular expression for the arrow splitting sides of the reaction equation.
-#' 
-#' @return A list suitable for input to Gurobi.
-#' 
-#' @family parsing_and_conversion
-#' @export
-#' 
-#' @examples 
-#' data(ecoli_core)
-#' library(dplyr)
-#'
-#' gurobi_model <- ecoli_core %>%
-#'   reactiontbl_to_expanded %>%
-#'   expanded_to_gurobi
-#'   
-#' \dontrun{   
-#' if(requireNamespace('gurobi', quietly=TRUE)){
-#'   gurobi <- gurobi(gurobi_model)
-#'   
-#'   ecoli_core_with_flux <- ecoli_core %>%
-#'     mutate(flux = guorbi_result[['solution']])
-#' }
-#' }
-reactiontbl_to_gurobi <- function(reaction_table, regex_arrow = '<?[-=]+>'){
-  expanded_to_gurobi(reactiontbl_to_expanded(reaction_table, regex_arrow))
-}
-
-# Deprecated functions
-
-expand_reactions <- function(reaction_table, regex_arrow = '<?[-=]+>'){
-  .Deprecated('reactiontbl_to_expanded')
-  reactiontbl_to_expanded(reaction_table, regex_arrow)$stoich
-}
-
-collapse_reactions_gurobi <- function(reactions_expanded, reaction_table){
-  .Deprecated('expanded_to_gurobi')
-  expanded_to_gurobi(list(stoich=reactions_expanded, rxns=reaction_table))
-}
-
-parse_reaction_table <- function(reaction_table, regex_arrow = '<?[-=]+>'){
-  .Deprecated('reactiontbl_to_gurobi')
-  reactiontbl_to_gurobi(reaction_table, regex_arrow)
-}
 

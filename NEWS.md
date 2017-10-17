@@ -1,3 +1,34 @@
+# fbar 0.3.3
+
+- Spelling corrections
+
+# fbar 0.3.2
+
+- Minor updates for Cran release
+
+# fbar 0.3.1
+
+- Created website using pkgdown
+
+# fbar 0.3.0
+
+- Moved to new NSE framework
+
+# fbar 0.2.2
+
+- Deprecated `expanded_to_gurobi`, `expanded_to_glpk` and `reactiontbl_to_gurobi`. ROI will now be the only backend.
+
+# fbar 0.2.1
+
+- Updated and corrected some test code
+- Added test and fix for situation where metabolite is used multiple times in one reaction string
+- Small updates to vignettes and readme
+
+# fbar 0.2.0
+
+- Added new functions for metabolite parsing
+- Added more documentation
+
 # fbar 0.1.23
 
 - Added DONTRUN to some examples which take too long on some platforms

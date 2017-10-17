@@ -28,7 +28,26 @@ This gives flexibility, but means that malicious code in the \code{gene_sets} ar
 \code{gene_sets} is evaluated in a restricted environment, but there might be a way around this, so you might want to check for anything suspicious in this argument manually.
 For more information, read the code.
 }
+
+\examples{
+data(iJO1366)
+library(dplyr)
+
+gene_table = data_frame(name = iJO1366$GRassoc \%>\%
+stringr::str_split('and|or|\\\\s|\\\\(|\\\\)') \%>\%
+  purrr::flatten_chr() \%>\%
+  unique,
+presence = 1) \%>\%
+  filter(name != '', !is.na(name))
+
+gene_associate(reaction_table = iJO1366 \%>\%
+                 mutate(geneAssociation = GRassoc \%>\%
+                          stringr::str_replace_all('and', '&') \%>\%
+                          stringr::str_replace_all('or', '|')
+                 ),
+               gene_table = gene_table
+)
+}
 \seealso{
 gene_eval
 }
-

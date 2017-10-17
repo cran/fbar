@@ -4,7 +4,7 @@
 
 <head>
 
-<meta charset="utf-8">
+<meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 
@@ -12,7 +12,7 @@
 
 <meta name="author" content="Max Conway" />
 
-<meta name="date" content="2017-01-14" />
+<meta name="date" content="2017-10-17" />
 
 <title>Multi-Objective Optimization case study</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Multi-Objective Optimization case study</h1>
 <h4 class="author"><em>Max Conway</em></h4>
-<h4 class="date"><em>2017-01-14</em></h4>
+<h4 class="date"><em>2017-10-17</em></h4>
 
 
 
@@ -78,8 +78,16 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <h1>Multi Objective Optimization tutorial</h1>
 <p>This tutorial is an in depth example of the use of this package in the context of an evolutionary optimization approach. It also shows the use of <code>gene_eval</code> to calculate a reaction speed from gene expressions.</p>
 <p>First, we need to load the appropriate libraries. You may also need to load your optimization library of choice.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(tidyverse)
-<span class="kw">library</span>(stringr)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(tidyverse)</code></pre></div>
+<pre><code>## Loading tidyverse: ggplot2
+## Loading tidyverse: tibble
+## Loading tidyverse: tidyr
+## Loading tidyverse: readr
+## Loading tidyverse: purrr</code></pre>
+<pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
+<pre><code>## filter(): dplyr, stats
+## lag():    dplyr, stats</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(stringr)
 <span class="kw">library</span>(fbar)</code></pre></div>
 <p>This code block loads a model, then extracts the list of genes from the model. The model takes the form of a tabular list of reactions.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">data</span>(<span class="st">&quot;ecoli_core&quot;</span>)
@@ -148,7 +156,7 @@ genes_in_model &lt;-<span class="st"> </span>model$geneAssociation %&gt;%
                             )
       ) %&gt;%
 <span class="st">      </span><span class="kw">group_by</span>(<span class="dt">id =</span> id.x, <span class="dt">property =</span> property, front, <span class="dt">value =</span> value.x) %&gt;%
-<span class="st">      </span>summarise
+<span class="st">      </span><span class="kw">summarise</span>()
     
     currentfront &lt;-<span class="st"> </span>currentfront +<span class="st"> </span><span class="dv">1</span>
   }
@@ -220,7 +228,7 @@ results %&gt;%
   (function () {
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
     document.getElementsByTagName("head")[0].appendChild(script);
   })();
 </script>

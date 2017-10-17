@@ -19,6 +19,26 @@
 #' @import assertthat 
 #' @import dplyr
 #' @importFrom magrittr %>%
+#' @importFrom rlang .data
+#' 
+#' @examples 
+#' data(iJO1366)
+#' library(dplyr)
+#' 
+#' gene_table = data_frame(name = iJO1366$GRassoc %>%
+#' stringr::str_split('and|or|\\s|\\(|\\)') %>%
+#'   purrr::flatten_chr() %>%
+#'   unique,
+#' presence = 1) %>%
+#'   filter(name != '', !is.na(name))
+#' 
+#' gene_associate(reaction_table = iJO1366 %>%
+#'                  mutate(geneAssociation = GRassoc %>%
+#'                           stringr::str_replace_all('and', '&') %>%
+#'                           stringr::str_replace_all('or', '|')
+#'                  ),
+#'                gene_table = gene_table
+#' )
 gene_associate <- function(reaction_table, gene_table, expression_flux_function = function(x){(1+log(x)/stats::sd(x)^2)^sign(x-1)}){
   assert_that('data.frame' %in% class(reaction_table))
   assert_that('data.frame' %in% class(gene_table))
@@ -27,7 +47,7 @@ gene_associate <- function(reaction_table, gene_table, expression_flux_function 
   assert_that(gene_table %has_name% 'presence')
   
   reaction_table %>%
-    mutate_(present =~ gene_eval(geneAssociation, gene_table$name, gene_table$presence)) %>%
-    mutate_(uppbnd =~ uppbnd*expression_flux_function(present),
-            lowbnd =~ lowbnd*expression_flux_function(present))
+    mutate(present = gene_eval(.data$geneAssociation, gene_table$name, gene_table$presence)) %>%
+    mutate(uppbnd = .data$uppbnd*expression_flux_function(.data$present),
+            lowbnd = .data$lowbnd*expression_flux_function(.data$present))
 }
