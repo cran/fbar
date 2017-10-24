@@ -12,7 +12,7 @@
 
 <meta name="author" content="Max Conway" />
 
-<meta name="date" content="2017-10-17" />
+<meta name="date" content="2017-10-24" />
 
 <title>Introduction</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Introduction</h1>
 <h4 class="author"><em>Max Conway</em></h4>
-<h4 class="date"><em>2017-10-17</em></h4>
+<h4 class="date"><em>2017-10-24</em></h4>
 
 
 
@@ -98,17 +98,17 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="kw">try</span>(<span class="kw">library</span>(ROI.plugin.ecos))
 <span class="kw">data</span>(ecoli_core)
 
-roi_model &lt;-<span class="st"> </span>ecoli_core %&gt;%
-<span class="st">  </span>reactiontbl_to_expanded %&gt;%
+roi_model &lt;-<span class="st"> </span>ecoli_core <span class="op">%&gt;%</span>
+<span class="st">  </span>reactiontbl_to_expanded <span class="op">%&gt;%</span>
 <span class="st">  </span>expanded_to_ROI
   
 <span class="co"># First, we need to check that an appropriate solver is available.</span>
 <span class="co"># If you don't have an appropriate solver, see the section on installing </span>
 <span class="co"># one later in this document.</span>
-if(<span class="kw">length</span>(<span class="kw">ROI_applicable_solvers</span>(roi_model))&gt;=<span class="dv">1</span>){
+<span class="cf">if</span>(<span class="kw">length</span>(<span class="kw">ROI_applicable_solvers</span>(roi_model))<span class="op">&gt;=</span><span class="dv">1</span>){
   roi_result &lt;-<span class="st"> </span><span class="kw">ROI_solve</span>(roi_model)
   
-  ecoli_core_with_flux &lt;-<span class="st"> </span>ecoli_core %&gt;%
+  ecoli_core_with_flux &lt;-<span class="st"> </span>ecoli_core <span class="op">%&gt;%</span>
 <span class="st">    </span><span class="kw">mutate</span>(<span class="dt">flux =</span> roi_result[[<span class="st">'solution'</span>]])
 }</code></pre></div>
 <p>This example expands the single data frame model into an intermediate form, the collapses it back to a gurobi model and evaluates it. Then it adds the result as a column, named flux. This longer style is useful because it allows access to the intermediate form. This just consists of three data frames: metabolites, stoichiometry, and reactions. This makes it easy to alter and combine models.</p>
@@ -148,7 +148,7 @@ if(<span class="kw">length</span>(<span class="kw">ROI_applicable_solvers</span>
 <h3>Installation</h3>
 <div id="install-this-package" class="section level4">
 <h4>Install this package:</h4>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">devtools::<span class="kw">install_github</span>(<span class="st">'maxconway/fbar'</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">devtools<span class="op">::</span><span class="kw">install_github</span>(<span class="st">'maxconway/fbar'</span>)</code></pre></div>
 </div>
 <div id="install-a-linear-programming-solver" class="section level4">
 <h4>Install a linear programming solver:</h4>

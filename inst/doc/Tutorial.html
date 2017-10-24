@@ -12,7 +12,7 @@
 
 <meta name="author" content="Max Conway" />
 
-<meta name="date" content="2017-10-17" />
+<meta name="date" content="2017-10-24" />
 
 <title>Tutorial</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Tutorial</h1>
 <h4 class="author"><em>Max Conway</em></h4>
-<h4 class="date"><em>2017-10-17</em></h4>
+<h4 class="date"><em>2017-10-24</em></h4>
 
 
 
@@ -84,14 +84,14 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">install.packages</span>(<span class="st">'fbar'</span>)
 <span class="kw">library</span>(fbar)</code></pre></div>
 <p>or</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">devtools::<span class="kw">install_github</span>(<span class="st">'maxconway/fbar'</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">devtools<span class="op">::</span><span class="kw">install_github</span>(<span class="st">'maxconway/fbar'</span>)
 <span class="kw">library</span>(fbar)</code></pre></div>
 <p>However, <code>fbar</code>, like all flux balance analysis packages, requires an linear programming library in order to conduct simulations. <code>fbar</code> can use a number of linear programming libraries via the R Optimization Infrastructure (<code>ROI</code>) library and its plugins, and also supports <code>Rglpk</code> and <code>gurobi</code> directly.</p>
 <p>The suggested method to get started quickly is via the <code>ROI.plugin.ecos</code> library. To install and set it up, just run:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ROI::<span class="kw">ROI_registered_solvers</span>()
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ROI<span class="op">::</span><span class="kw">ROI_registered_solvers</span>()
 <span class="kw">install.packages</span>(<span class="st">'ROI.plugin.ecos'</span>)
 <span class="kw">library</span>(<span class="st">'ROI.plugin.ecos'</span>) <span class="co"># This line is necessary to register the plugin with ROI the first time</span>
-ROI::<span class="kw">ROI_registered_solvers</span>()</code></pre></div>
+ROI<span class="op">::</span><span class="kw">ROI_registered_solvers</span>()</code></pre></div>
 <p>The <code>ROI.plugin.ecos</code> library does not export any functions, but running the <code>library</code> statement is necessary after installation to register with <code>ROI</code>.</p>
 <p>Installing other optimizers to work with <code>ROI</code> is normally similar, but you may have to install a separate package on your operating system first.</p>
 </div>
@@ -149,13 +149,13 @@ ROI::<span class="kw">ROI_registered_solvers</span>()</code></pre></div>
 <p>To find the fluxes, and then compare them to the original model, do the following:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(dplyr) <span class="co"># load dplyr, to explore data</span>
 
-ecoli_fluxes &lt;-<span class="st"> </span>ecoli_core %&gt;%<span class="st"> </span>
-<span class="st">  </span><span class="kw">reactiontbl_to_expanded</span>() %&gt;%<span class="st"> </span>
-<span class="st">  </span><span class="kw">expanded_to_ROI</span>() %&gt;%<span class="st"> </span>
-<span class="st">  </span>ROI::<span class="kw">ROI_solve</span>() %&gt;%<span class="st"> </span>
-<span class="st">  </span>ROI::<span class="kw">solution</span>()
+ecoli_fluxes &lt;-<span class="st"> </span>ecoli_core <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">reactiontbl_to_expanded</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">expanded_to_ROI</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>ROI<span class="op">::</span><span class="kw">ROI_solve</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>ROI<span class="op">::</span><span class="kw">solution</span>()
 
-ecoli_core_evaluated &lt;-<span class="st"> </span>ecoli_core %&gt;%
+ecoli_core_evaluated &lt;-<span class="st"> </span>ecoli_core <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">mutate</span>(<span class="dt">flux =</span> ecoli_fluxes)</code></pre></div>
 <div id="questions-1" class="section level3">
 <h3>Questions</h3>

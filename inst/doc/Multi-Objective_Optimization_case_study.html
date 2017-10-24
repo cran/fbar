@@ -12,7 +12,7 @@
 
 <meta name="author" content="Max Conway" />
 
-<meta name="date" content="2017-10-17" />
+<meta name="date" content="2017-10-24" />
 
 <title>Multi-Objective Optimization case study</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Multi-Objective Optimization case study</h1>
 <h4 class="author"><em>Max Conway</em></h4>
-<h4 class="date"><em>2017-10-17</em></h4>
+<h4 class="date"><em>2017-10-24</em></h4>
 
 
 
@@ -93,11 +93,11 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">data</span>(<span class="st">&quot;ecoli_core&quot;</span>)
 model &lt;-<span class="st"> </span>ecoli_core
 
-genes_in_model &lt;-<span class="st"> </span>model$geneAssociation %&gt;%
-<span class="st">  </span><span class="kw">str_split</span>(<span class="st">'[()|&amp; ]+'</span>) %&gt;%
-<span class="st">  </span><span class="kw">flatten_chr</span>() %&gt;%
-<span class="st">  </span><span class="kw">discard</span>(is.na) %&gt;%
-<span class="st">  </span><span class="kw">discard</span>(~<span class="st"> </span><span class="kw">str_length</span>(.x)==<span class="dv">0</span>)</code></pre></div>
+genes_in_model &lt;-<span class="st"> </span>model<span class="op">$</span>geneAssociation <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">str_split</span>(<span class="st">'[()|&amp; ]+'</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">flatten_chr</span>() <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">discard</span>(is.na) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">discard</span>(<span class="op">~</span><span class="st"> </span><span class="kw">str_length</span>(.x)<span class="op">==</span><span class="dv">0</span>)</code></pre></div>
 <p>The evaluation function is where the actual metabolic simulations are performed. This has four main stages:</p>
 <ul>
 <li>The gene-reaction associations (<code>geneAssociation</code>) are evaluated in the context of which genes are present in this iteration (<code>genome</code>).</li>
@@ -106,21 +106,21 @@ genes_in_model &lt;-<span class="st"> </span>model$geneAssociation %&gt;%
 <li>With the biomass value fixed, we the optimize to maximize the synthetic objective.</li>
 </ul>
 <p>The technique of fixing the biomass followed by maximizing the synthetic objective is important because there could still be slack in the model after the first optimization stage, and we wish to have a reliable synthetic objective estimate.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">evaluation_function &lt;-<span class="st"> </span>function(genome){
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">evaluation_function &lt;-<span class="st"> </span><span class="cf">function</span>(genome){
   
-  res &lt;-<span class="st"> </span>model %&gt;%
+  res &lt;-<span class="st"> </span>model <span class="op">%&gt;%</span>
 <span class="st">    </span><span class="kw">mutate</span>(<span class="dt">activation =</span> <span class="kw">gene_eval</span>(geneAssociation, <span class="kw">names</span>(genome), genome),
            <span class="dt">activation =</span> <span class="kw">coalesce</span>(activation, <span class="dv">1</span>),
-           <span class="dt">uppbnd =</span> uppbnd*activation,
-           <span class="dt">lowbnd =</span> lowbnd*activation) %&gt;%
-<span class="st">    </span><span class="kw">find_fluxes_df</span>(<span class="dt">do_minimization =</span> <span class="ot">FALSE</span>) %&gt;%
-<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">lowbnd =</span> <span class="kw">ifelse</span>(abbreviation==<span class="st">'Biomass_Ecoli_core_w/GAM'</span>, flux*<span class="fl">0.99</span>, lowbnd),
-           <span class="dt">uppbnd =</span> <span class="kw">ifelse</span>(abbreviation==<span class="st">'Biomass_Ecoli_core_w/GAM'</span>, flux*<span class="fl">1.01</span>, uppbnd),
-           <span class="dt">obj_coef =</span> <span class="dv">1</span>*(abbreviation==<span class="st">'EX_ac(e)'</span>)) %&gt;%
+           <span class="dt">uppbnd =</span> uppbnd<span class="op">*</span>activation,
+           <span class="dt">lowbnd =</span> lowbnd<span class="op">*</span>activation) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">find_fluxes_df</span>(<span class="dt">do_minimization =</span> <span class="ot">FALSE</span>) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">lowbnd =</span> <span class="kw">ifelse</span>(abbreviation<span class="op">==</span><span class="st">'Biomass_Ecoli_core_w/GAM'</span>, flux<span class="op">*</span><span class="fl">0.99</span>, lowbnd),
+           <span class="dt">uppbnd =</span> <span class="kw">ifelse</span>(abbreviation<span class="op">==</span><span class="st">'Biomass_Ecoli_core_w/GAM'</span>, flux<span class="op">*</span><span class="fl">1.01</span>, uppbnd),
+           <span class="dt">obj_coef =</span> <span class="dv">1</span><span class="op">*</span>(abbreviation<span class="op">==</span><span class="st">'EX_ac(e)'</span>)) <span class="op">%&gt;%</span>
 <span class="st">    </span><span class="kw">find_fluxes_df</span>(<span class="dt">do_minimization =</span> <span class="ot">FALSE</span>)
   
-  <span class="kw">return</span>(<span class="kw">list</span>(<span class="dt">bm =</span> <span class="kw">filter</span>(res, abbreviation==<span class="st">'Biomass_Ecoli_core_w/GAM'</span>)$flux, 
-              <span class="dt">synth =</span> <span class="kw">filter</span>(res, abbreviation==<span class="st">'EX_ac(e)'</span>)$flux))
+  <span class="kw">return</span>(<span class="kw">list</span>(<span class="dt">bm =</span> <span class="kw">filter</span>(res, abbreviation<span class="op">==</span><span class="st">'Biomass_Ecoli_core_w/GAM'</span>)<span class="op">$</span>flux, 
+              <span class="dt">synth =</span> <span class="kw">filter</span>(res, abbreviation<span class="op">==</span><span class="st">'EX_ac(e)'</span>)<span class="op">$</span>flux))
 }</code></pre></div>
 <p>Non-domination sorting is the first stage of the selection procedure in NSGA-II. The code might be quite opaque, but the idea is as follows:</p>
 <ul>
@@ -129,55 +129,55 @@ genes_in_model &lt;-<span class="st"> </span>model$geneAssociation %&gt;%
 <li>We find the set of points which have no dominating point, and term this the first non-dominated front.</li>
 <li>We repeat this procedure, but ignoring points in the first non-dominated front, to find the second on-dominated front, and so on.</li>
 </ul>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">non_dom_sort &lt;-<span class="st"> </span>function(input){
-  input_long &lt;-<span class="st"> </span>input %&gt;%
-<span class="st">    </span><span class="kw">gather</span>(property, value, -id) %&gt;%
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">non_dom_sort &lt;-<span class="st"> </span><span class="cf">function</span>(input){
+  input_long &lt;-<span class="st"> </span>input <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">gather</span>(property, value, <span class="op">-</span>id) <span class="op">%&gt;%</span>
 <span class="st">    </span><span class="kw">mutate</span>(<span class="dt">front=</span><span class="ot">NA</span>)
   
   currentfront &lt;-<span class="st"> </span><span class="dv">1</span>
   
-  while(<span class="kw">any</span>(<span class="kw">is.na</span>(input_long$front))){
+  <span class="cf">while</span>(<span class="kw">any</span>(<span class="kw">is.na</span>(input_long<span class="op">$</span>front))){
     
-    input_long &lt;-<span class="st"> </span>input_long %&gt;%
-<span class="st">      </span><span class="kw">inner_join</span>(.,., <span class="dt">by=</span><span class="st">'property'</span>) %&gt;%
-<span class="st">      </span><span class="kw">group_by</span>(id.x,id.y) %&gt;%
-<span class="st">      </span><span class="kw">mutate</span>(<span class="dt">dominance =</span> <span class="kw">ifelse</span>(<span class="kw">all</span>(value.x&gt;=value.y), 
+    input_long &lt;-<span class="st"> </span>input_long <span class="op">%&gt;%</span>
+<span class="st">      </span><span class="kw">inner_join</span>(.,., <span class="dt">by=</span><span class="st">'property'</span>) <span class="op">%&gt;%</span>
+<span class="st">      </span><span class="kw">group_by</span>(id.x,id.y) <span class="op">%&gt;%</span>
+<span class="st">      </span><span class="kw">mutate</span>(<span class="dt">dominance =</span> <span class="kw">ifelse</span>(<span class="kw">all</span>(value.x<span class="op">&gt;=</span>value.y), 
                                 <span class="st">'xdomy'</span>, 
-                                <span class="kw">ifelse</span>(<span class="kw">all</span>(value.y&gt;=value.x), 
+                                <span class="kw">ifelse</span>(<span class="kw">all</span>(value.y<span class="op">&gt;=</span>value.x), 
                                        <span class="st">'ydomx'</span>, 
                                        <span class="st">'nondom'</span>
                                        )
                                 )
-      ) %&gt;%
-<span class="st">      </span><span class="kw">group_by</span>(id.x) %&gt;%
-<span class="st">      </span><span class="kw">mutate</span>(<span class="dt">front =</span> <span class="kw">ifelse</span>(<span class="kw">all</span>(dominance[<span class="kw">is.na</span>(front.y)] %in%<span class="st"> </span><span class="kw">c</span>(<span class="st">'xdomy'</span>, <span class="st">'nondom'</span>)), 
+      ) <span class="op">%&gt;%</span>
+<span class="st">      </span><span class="kw">group_by</span>(id.x) <span class="op">%&gt;%</span>
+<span class="st">      </span><span class="kw">mutate</span>(<span class="dt">front =</span> <span class="kw">ifelse</span>(<span class="kw">all</span>(dominance[<span class="kw">is.na</span>(front.y)] <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">'xdomy'</span>, <span class="st">'nondom'</span>)), 
                             <span class="kw">pmin</span>(currentfront, front.x, <span class="dt">na.rm=</span><span class="ot">TRUE</span>), 
                             <span class="ot">NA</span>
                             )
-      ) %&gt;%
-<span class="st">      </span><span class="kw">group_by</span>(<span class="dt">id =</span> id.x, <span class="dt">property =</span> property, front, <span class="dt">value =</span> value.x) %&gt;%
+      ) <span class="op">%&gt;%</span>
+<span class="st">      </span><span class="kw">group_by</span>(<span class="dt">id =</span> id.x, <span class="dt">property =</span> property, front, <span class="dt">value =</span> value.x) <span class="op">%&gt;%</span>
 <span class="st">      </span><span class="kw">summarise</span>()
     
-    currentfront &lt;-<span class="st"> </span>currentfront +<span class="st"> </span><span class="dv">1</span>
+    currentfront &lt;-<span class="st"> </span>currentfront <span class="op">+</span><span class="st"> </span><span class="dv">1</span>
   }
   
   <span class="kw">return</span>(
-    input_long %&gt;%
+    input_long <span class="op">%&gt;%</span>
 <span class="st">      </span><span class="kw">spread</span>(property, value)
   )
   
 }</code></pre></div>
 <p>The second part of the NSGA-II evaluation procedure is finding the crowding distance. This is used to break ties between points in the same non-dominated front. In for each front, for each dimension, this function sorts the points into order along the dimension, and finds the normalized distance between the proceeding point and succeeding point. These values are summed up across each dimension to find the value for the point.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">crowding_distance &lt;-<span class="st"> </span>function(input){
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">crowding_distance &lt;-<span class="st"> </span><span class="cf">function</span>(input){
   <span class="kw">return</span>(
-    input %&gt;%
-<span class="st">      </span><span class="kw">gather</span>(property, value, -id, -front) %&gt;%
-<span class="st">      </span><span class="kw">group_by</span>(front, property) %&gt;%
-<span class="st">      </span><span class="kw">arrange</span>(value) %&gt;%
-<span class="st">      </span><span class="kw">mutate</span>(<span class="dt">crowding =</span> (<span class="kw">lead</span>(value)-<span class="kw">lag</span>(value))/(<span class="kw">max</span>(value)-<span class="kw">min</span>(value)),
-             <span class="dt">crowding =</span> <span class="kw">ifelse</span>(<span class="kw">is.na</span>(crowding),<span class="ot">Inf</span>, crowding)) %&gt;%
-<span class="st">      </span><span class="kw">group_by</span>(id) %&gt;%
-<span class="st">      </span><span class="kw">mutate</span>(<span class="dt">crowding =</span> <span class="kw">sum</span>(crowding)) %&gt;%
+    input <span class="op">%&gt;%</span>
+<span class="st">      </span><span class="kw">gather</span>(property, value, <span class="op">-</span>id, <span class="op">-</span>front) <span class="op">%&gt;%</span>
+<span class="st">      </span><span class="kw">group_by</span>(front, property) <span class="op">%&gt;%</span>
+<span class="st">      </span><span class="kw">arrange</span>(value) <span class="op">%&gt;%</span>
+<span class="st">      </span><span class="kw">mutate</span>(<span class="dt">crowding =</span> (<span class="kw">lead</span>(value)<span class="op">-</span><span class="kw">lag</span>(value))<span class="op">/</span>(<span class="kw">max</span>(value)<span class="op">-</span><span class="kw">min</span>(value)),
+             <span class="dt">crowding =</span> <span class="kw">ifelse</span>(<span class="kw">is.na</span>(crowding),<span class="ot">Inf</span>, crowding)) <span class="op">%&gt;%</span>
+<span class="st">      </span><span class="kw">group_by</span>(id) <span class="op">%&gt;%</span>
+<span class="st">      </span><span class="kw">mutate</span>(<span class="dt">crowding =</span> <span class="kw">sum</span>(crowding)) <span class="op">%&gt;%</span>
 <span class="st">      </span><span class="kw">spread</span>(property, value)
   )
 }</code></pre></div>
@@ -187,37 +187,37 @@ pop &lt;-<span class="st"> </span><span class="kw">list</span>(start_genome)
 
 popsize =<span class="st"> </span><span class="dv">50</span>
 
-for(i in <span class="dv">1</span>:<span class="dv">50</span>){
-  results &lt;-<span class="st"> </span><span class="kw">map_df</span>(pop, evaluation_function) %&gt;%<span class="st"> </span><span class="co"># Evaluate all the genomes</span>
-<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">bm=</span><span class="kw">signif</span>(bm), <span class="dt">synth=</span><span class="kw">signif</span>(synth)) %&gt;%<span class="st"> </span><span class="co"># Round results</span>
-<span class="st">    </span><span class="kw">unique</span>() %&gt;%<span class="st"> </span><span class="co"># Throw away duplicates</span>
-<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">id =</span> <span class="dv">1</span>:<span class="kw">n</span>()) %&gt;%<span class="st"> </span><span class="co"># label the results</span>
-<span class="st">    </span><span class="kw">sample_frac</span>() %&gt;%<span class="st"> </span><span class="co"># Shuffle</span>
-<span class="st">    </span><span class="kw">non_dom_sort</span>() %&gt;%<span class="st"> </span><span class="co"># Find the non-dominated fronts</span>
-<span class="st">    </span>crowding_distance %&gt;%<span class="st"> </span><span class="co"># Find the crowding distances</span>
+<span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="dv">50</span>){
+  results &lt;-<span class="st"> </span><span class="kw">map_df</span>(pop, evaluation_function) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># Evaluate all the genomes</span>
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">bm=</span><span class="kw">signif</span>(bm), <span class="dt">synth=</span><span class="kw">signif</span>(synth)) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># Round results</span>
+<span class="st">    </span><span class="kw">unique</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># Throw away duplicates</span>
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">id =</span> <span class="dv">1</span><span class="op">:</span><span class="kw">n</span>()) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># label the results</span>
+<span class="st">    </span><span class="kw">sample_frac</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># Shuffle</span>
+<span class="st">    </span><span class="kw">non_dom_sort</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># Find the non-dominated fronts</span>
+<span class="st">    </span>crowding_distance <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># Find the crowding distances</span>
 <span class="st">    </span><span class="kw">arrange</span>(front, <span class="kw">desc</span>(crowding)) <span class="co"># Sort by front, breaking ties by crowding distance</span>
   
-  selected &lt;-<span class="st"> </span>results %&gt;%
-<span class="st">    </span><span class="kw">filter</span>(<span class="kw">row_number</span>() &lt;=<span class="st"> </span>popsize/<span class="dv">2</span>) %&gt;%<span class="st"> </span><span class="co"># Keep the best half of the population</span>
+  selected &lt;-<span class="st"> </span>results <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">filter</span>(<span class="kw">row_number</span>() <span class="op">&lt;=</span><span class="st"> </span>popsize<span class="op">/</span><span class="dv">2</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># Keep the best half of the population</span>
 <span class="st">    </span><span class="kw">getElement</span>(<span class="st">'id'</span>)
   
   kept_pop &lt;-<span class="st"> </span>pop[selected]
-  altered_pop &lt;-<span class="st"> </span>kept_pop %&gt;%
-<span class="st">    </span><span class="kw">sample</span>(popsize-<span class="kw">length</span>(selected), <span class="ot">TRUE</span>) %&gt;%<span class="st"> </span><span class="co"># Select a random portion of the population as parents</span>
-<span class="st">    </span><span class="kw">map</span>(function(genome){<span class="kw">xor</span>(genome, <span class="kw">runif</span>(<span class="kw">length</span>(genome))&gt;<span class="fl">0.98</span>)}) <span class="co"># Mutate a small number of genes from the parent population.</span>
+  altered_pop &lt;-<span class="st"> </span>kept_pop <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">sample</span>(popsize<span class="op">-</span><span class="kw">length</span>(selected), <span class="ot">TRUE</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># Select a random portion of the population as parents</span>
+<span class="st">    </span><span class="kw">map</span>(<span class="cf">function</span>(genome){<span class="kw">xor</span>(genome, <span class="kw">runif</span>(<span class="kw">length</span>(genome))<span class="op">&gt;</span><span class="fl">0.98</span>)}) <span class="co"># Mutate a small number of genes from the parent population.</span>
   
   pop &lt;-<span class="st"> </span><span class="kw">unique</span>(<span class="kw">c</span>(kept_pop, altered_pop)) <span class="co"># Combine the ofspring and parent populations</span>
 }</code></pre></div>
 <p>Now that we have results, the set of all non-dominated points, known as the Pareto Front. This describes the tradeoff between biomass production and our synthetic objective.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(ggplot2)
 
-results %&gt;%
-<span class="st">  </span><span class="kw">filter</span>(front==<span class="dv">1</span>) %&gt;%
-<span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x=</span>bm, <span class="dt">y=</span>synth, <span class="dt">colour=</span>front)) +<span class="st"> </span>
-<span class="st">  </span><span class="kw">geom_point</span>() +<span class="st"> </span>
-<span class="st">  </span><span class="kw">geom_step</span>(<span class="dt">direction=</span><span class="st">'vh'</span>) +
-<span class="st">  </span><span class="kw">scale_x_log10</span>() +
-<span class="st">  </span><span class="kw">scale_y_log10</span>() +
+results <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">filter</span>(front<span class="op">==</span><span class="dv">1</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x=</span>bm, <span class="dt">y=</span>synth, <span class="dt">colour=</span>front)) <span class="op">+</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">geom_point</span>() <span class="op">+</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">geom_step</span>(<span class="dt">direction=</span><span class="st">'vh'</span>) <span class="op">+</span>
+<span class="st">  </span><span class="kw">scale_x_log10</span>() <span class="op">+</span>
+<span class="st">  </span><span class="kw">scale_y_log10</span>() <span class="op">+</span>
 <span class="st">  </span><span class="kw">theme_bw</span>()</code></pre></div>
 </div>
 

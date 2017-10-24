@@ -1,8 +1,8 @@
 Package: fbar
 Type: Package
 Title: An Extensible Approach to Flux Balance Analysis
-Version: 0.3.3
-Date: 2017-10-17
+Version: 0.3.4
+Date: 2017-10-24
 Authors@R: person("Max", "Conway", email = "conway.max1@gmail.com",
                   role = c("aut", "cre"))
 Description: A simple package for Flux Balance Analysis and related
@@ -27,8 +27,8 @@ Suggests: knitr, rmarkdown, testthat, tidyverse
 VignetteBuilder: knitr
 RoxygenNote: 6.0.1
 NeedsCompilation: no
-Packaged: 2017-10-17 22:48:46 UTC; mjc233
+Packaged: 2017-10-24 14:46:53 UTC; mjc233
 Author: Max Conway [aut, cre]
 Maintainer: Max Conway <conway.max1@gmail.com>
 Repository: CRAN
-Date/Publication: 2017-10-17 22:56:31 UTC
+Date/Publication: 2017-10-24 14:56:31 UTC
