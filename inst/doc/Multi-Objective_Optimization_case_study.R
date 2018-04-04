@@ -1,5 +1,6 @@
 ## ---- results="hide"-----------------------------------------------------
-library(tidyverse)
+library(dplyr)
+library(purrr)
 library(stringr)
 library(fbar)
 

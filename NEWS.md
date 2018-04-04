@@ -1,3 +1,10 @@
+# fbar 0.4.3
+
+- New function for retrieving models from BiGG (not exported yet)
+- Changes to model data files
+- New data file to help specify exchange reactions
+- Changed some function argument defaults
+
 # fbar 0.3.4
 
 - Test updates and tidying to work with new version of ROI
