@@ -1,10 +1,10 @@
-## ---- results="hide"-----------------------------------------------------
+## ---- results="hide"----------------------------------------------------------
 library(dplyr)
 library(purrr)
 library(stringr)
 library(fbar)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 data("ecoli_core")
 model <- ecoli_core %>%
   mutate(geneAssociation = geneAssociation %>%
@@ -17,7 +17,7 @@ genes_in_model <- model$geneAssociation %>%
   discard(is.na) %>%
   discard(~ str_length(.x)==0)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 evaluation_function <- function(genome){
   
   res <- model %>%
@@ -35,7 +35,7 @@ evaluation_function <- function(genome){
               synth = filter(res, abbreviation=='EX_ac_e')$flux))
 }
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 non_dom_sort <- function(input){
   input_long <- input %>%
     gather(property, value, -id) %>%
@@ -75,7 +75,7 @@ non_dom_sort <- function(input){
   
 }
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 crowding_distance <- function(input){
   return(
     input %>%
@@ -90,7 +90,7 @@ crowding_distance <- function(input){
   )
 }
 
-## ---- eval=FALSE---------------------------------------------------------
+## ---- eval=FALSE--------------------------------------------------------------
 #  start_genome <- set_names(rep_along(genes_in_model, TRUE), genes_in_model)
 #  pop <- list(start_genome)
 #  
@@ -118,7 +118,7 @@ crowding_distance <- function(input){
 #    pop <- unique(c(kept_pop, altered_pop)) # Combine the ofspring and parent populations
 #  }
 
-## ---- eval=FALSE---------------------------------------------------------
+## ---- eval=FALSE--------------------------------------------------------------
 #  library(ggplot2)
 #  
 #  results %>%

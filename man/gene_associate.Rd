@@ -4,9 +4,12 @@
 \alias{gene_associate}
 \title{Apply gene expressions to reaction table}
 \usage{
-gene_associate(reaction_table, gene_table,
-  expression_flux_function = function(x) {     (1 +
-  log(x)/stats::sd(x)^2)^sign(x - 1) })
+gene_associate(
+  reaction_table,
+  gene_table,
+  expression_flux_function = function(x) {     (1 + log(x)/stats::sd(x)^2)^sign(x - 1)
+    }
+)
 }
 \arguments{
 \item{reaction_table}{A data frame describing the metabolic model.}
@@ -33,7 +36,7 @@ For more information, read the code.
 data(iJO1366)
 library(dplyr)
 
-gene_table = data_frame(name = iJO1366$geneAssociation \%>\%
+gene_table = tibble(name = iJO1366$geneAssociation \%>\%
 stringr::str_split('and|or|\\\\s|\\\\(|\\\\)') \%>\%
   purrr::flatten_chr() \%>\%
   unique,

@@ -1,4 +1,4 @@
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 library(fbar)
 data(ecoli_core)
 
@@ -8,7 +8,7 @@ try({ # this will fail if no appropriate solver is available.
   ecoli_core_with_flux <- find_fluxes_df(ecoli_core)
 })
 
-## ---- message=FALSE------------------------------------------------------
+## ---- message=FALSE-----------------------------------------------------------
 library(fbar)
 library(dplyr)
 library(ROI)
@@ -29,9 +29,9 @@ if(length(ROI_applicable_solvers(roi_model))>=1){
     mutate(flux = roi_result[['solution']])
 }
 
-## ---- eval=FALSE---------------------------------------------------------
+## ---- eval=FALSE--------------------------------------------------------------
 #  devtools::install_github('maxconway/fbar')
 
-## ---- eval=FALSE---------------------------------------------------------
+## ---- eval=FALSE--------------------------------------------------------------
 #  install.packages('ROI.plugin.ecos')
 
